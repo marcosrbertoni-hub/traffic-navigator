@@ -1,5 +1,6 @@
 import type { ID, SiteAnalysis } from "@/domain/types";
 import { getSite, siteRepo } from "@/services/campaigns";
+import { analyzeSiteRemote } from "@/services/site-analysis.functions";
 
 export interface DiscoveredUrl {
   id: ID;
@@ -60,4 +61,14 @@ export const analyzeSiteDemo = (siteId: ID): SiteAnalysisResult | null => {
       "As URLs encontradas poderão alimentar campanhas e relatórios.",
     ],
   };
+};
+
+
+export const analyzeSite = async (siteId: ID): Promise<SiteAnalysisResult | null> => {
+  const site = getSite(siteId);
+  if (!site) return null;
+
+  const result = await analyzeSiteRemote({ data: { siteId, domain: site.domain } });
+  siteRepo.setAnalysis(siteId, result.analysis);
+  return result as SiteAnalysisResult;
 };
