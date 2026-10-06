@@ -1,7 +1,6 @@
 import { useSyncExternalStore } from "react";
 import type { Campaign, CampaignDraft, CampaignStatus, ID, Site } from "@/domain/types";
-import { DEMO_USER_ID, demoCampaigns, demoSites } from "@/mocks/demo";
-import { uid } from "@/lib/format";
+import { demoCampaigns, demoSites } from "@/mocks/demo";
 import { loadPersistedState, savePersistedState } from "@/services/storage";
 import { supabase } from "@/lib/supabase";
 import { getSession } from "@/services/auth";
@@ -215,5 +214,3 @@ export const siteRepo = {
   },
 };
 
-void uid;
-void DEMO_USER_ID;
