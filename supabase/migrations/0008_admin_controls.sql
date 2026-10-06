@@ -64,3 +64,13 @@ grant execute on function public.admin_grant_credits(uuid, integer, text) to aut
 
  drop policy if exists credit_balances_admin_select on public.credit_balances;
 create policy credit_balances_admin_select on public.credit_balances for select to authenticated using ((user_id = (select auth.uid())) or public.is_admin());
+
+
+drop policy if exists jobs_admin_select on public.jobs;
+create policy jobs_admin_select on public.jobs for select to authenticated using (public.is_admin());
+drop policy if exists job_runs_admin_select on public.job_runs;
+create policy job_runs_admin_select on public.job_runs for select to authenticated using (public.is_admin());
+drop policy if exists workers_admin_all on public.workers;
+create policy workers_admin_all on public.workers for all to authenticated using (public.is_admin()) with check (public.is_admin());
+drop policy if exists logs_admin_select on public.logs;
+create policy logs_admin_select on public.logs for select to authenticated using (public.is_admin());
