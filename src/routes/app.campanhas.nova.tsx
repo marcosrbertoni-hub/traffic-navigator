@@ -1,13 +1,27 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { DemoBanner, Field, NativeSelect, Panel, PageHeader } from "@/components/shared/kit";
-import { campaignRepo } from "@/services/campaigns";
+import { campaignRepo, useSites } from "@/services/campaigns";
+import { consumeCampaignPrefill } from "@/services/campaign-prefill";
 import { emptyDraft } from "@/mocks/demo";
 import type { CampaignDraft } from "@/domain/types";
 const steps = ["Site", "Sessão", "Páginas", "Origens", "Localização", "Volume", "Horários", "Revisão"];
 export const Route = createFileRoute("/app/campanhas/nova")({ component: NewCampaign });
 function NewCampaign() {
-  const navigate = useNavigate(); const [step,setStep]=useState(0); const [draft,setDraft]=useState<CampaignDraft>(()=>emptyDraft()); const [error,setError]=useState("");
+  const navigate = useNavigate(); const sites = useSites(); const [step,setStep]=useState(0); const [draft,setDraft]=useState<CampaignDraft>(()=>emptyDraft()); const [error,setError]=useState("");
+  useEffect(() => {
+    const prefill = consumeCampaignPrefill();
+    if (!prefill) return;
+    const site = sites.find((item) => item.id === prefill.site_id);
+    if (!site) return;
+    setDraft((current) => ({
+      ...current,
+      site_id: site.id,
+      start_url: current.start_url || `https://${site.domain}/`,
+      sitemap_url: current.sitemap_url || `https://${site.domain}/sitemap.xml`,
+      pages: prefill.pages.length ? prefill.pages : current.pages,
+    }));
+  }, [sites]);
   const estimatedCredits=useMemo(()=>Math.ceil(draft.settings.total_sessions*(0.8+draft.settings.pages_per_session*0.1)),[draft.settings.total_sessions,draft.settings.pages_per_session]);
   const update=(patch:Partial<CampaignDraft>)=>setDraft((d)=>({...d,...patch}));
   const settings=(patch:Partial<CampaignDraft["settings"]>)=>update({settings:{...draft.settings,...patch}});
@@ -21,7 +35,7 @@ function NewCampaign() {
     <PageHeader title="Nova campanha" description="Configure e revise uma jornada de teste em 8 etapas." />
     <div className="mb-6 grid gap-2 md:grid-cols-8">{steps.map((name,i)=><button key={name} type="button" onClick={()=>i<=step&&setStep(i)} className={"rounded-lg border p-3 text-left "+(i===step?"border-primary bg-primary/5":"bg-card")}><span className="font-mono text-xs text-primary">{"0"+(i+1)}</span><p className="mt-1 text-sm font-medium">{name}</p></button>)}</div>
     <Panel title={"Etapa "+(step+1)+" — "+steps[step]} description="Os dados ficam preparados para a futura persistência.">
-      {step===0&&<div className="grid gap-5 md:grid-cols-2"><Field label="Nome"><input value={draft.name} onChange={(e)=>update({name:e.target.value})} placeholder="Ex.: Jornada de navegação" className="h-10 w-full rounded-md border bg-background px-3 text-sm"/></Field><Field label="Site"><NativeSelect value={draft.site_id} onChange={(e)=>update({site_id:e.target.value})}><option value="">Selecione</option><option value="site-1">Loja Exemplo — loja-exemplo.com.br</option><option value="site-2">Blog Exemplo — blog-exemplo.com</option></NativeSelect></Field><Field label="URL inicial"><input type="url" value={draft.start_url} onChange={(e)=>update({start_url:e.target.value})} placeholder="https://seusite.com.br/" className="h-10 w-full rounded-md border bg-background px-3 text-sm md:col-span-2"/></Field><Field label="Sitemap XML (opcional)"><input type="url" value={draft.sitemap_url} onChange={(e)=>update({sitemap_url:e.target.value})} placeholder="https://seusite.com.br/sitemap.xml" className="h-10 w-full rounded-md border bg-background px-3 text-sm md:col-span-2"/></Field></div>}
+      {step===0&&<div className="grid gap-5 md:grid-cols-2"><Field label="Nome"><input value={draft.name} onChange={(e)=>update({name:e.target.value})} placeholder="Ex.: Jornada de navegação" className="h-10 w-full rounded-md border bg-background px-3 text-sm"/></Field><Field label="Site"><NativeSelect value={draft.site_id} onChange={(e)=>update({site_id:e.target.value})}><option value="">Selecione</option>{sites.map((site)=><option key={site.id} value={site.id}>{site.name} — {site.domain}</option>)}</NativeSelect></Field><Field label="URL inicial"><input type="url" value={draft.start_url} onChange={(e)=>update({start_url:e.target.value})} placeholder="https://seusite.com.br/" className="h-10 w-full rounded-md border bg-background px-3 text-sm md:col-span-2"/></Field><Field label="Sitemap XML (opcional)"><input type="url" value={draft.sitemap_url} onChange={(e)=>update({sitemap_url:e.target.value})} placeholder="https://seusite.com.br/sitemap.xml" className="h-10 w-full rounded-md border bg-background px-3 text-sm md:col-span-2"/></Field></div>}
       {step===1&&<div className="grid gap-5 md:grid-cols-2"><Field label="Sessões"><input type="number" min="1" value={draft.settings.total_sessions} onChange={(e)=>settings({total_sessions:Number(e.target.value)})} className="h-10 w-full rounded-md border bg-background px-3 text-sm"/></Field><Field label="Páginas por sessão"><input type="number" min="1" value={draft.settings.pages_per_session} onChange={(e)=>settings({pages_per_session:Number(e.target.value)})} className="h-10 w-full rounded-md border bg-background px-3 text-sm"/></Field><Field label="Duração mínima (s)"><input type="number" min="1" value={draft.settings.min_duration_sec} onChange={(e)=>settings({min_duration_sec:Number(e.target.value)})} className="h-10 w-full rounded-md border bg-background px-3 text-sm"/></Field><Field label="Duração máxima (s)"><input type="number" min="1" value={draft.settings.max_duration_sec} onChange={(e)=>settings({max_duration_sec:Number(e.target.value)})} className="h-10 w-full rounded-md border bg-background px-3 text-sm"/></Field><Field label="Desktop (%)"><input type="number" min="0" max="100" value={draft.settings.desktop_pct} onChange={(e)=>settings({desktop_pct:Number(e.target.value)})} className="h-10 w-full rounded-md border bg-background px-3 text-sm"/></Field><Field label="Novos visitantes (%)"><input type="number" min="0" max="100" value={draft.settings.new_visitor_pct} onChange={(e)=>settings({new_visitor_pct:Number(e.target.value)})} className="h-10 w-full rounded-md border bg-background px-3 text-sm"/></Field><p className="text-xs text-muted-foreground md:col-span-2">A futura execução poderá variar jornadas, duração, páginas e horários para cobertura de testes. Não inclui técnicas de evasão ou mascaramento de origem.</p></div>}
       {step===2&&<Field label="URLs da jornada" hint="Uma URL por linha. A futura análise de sitemap poderá preencher esta lista automaticamente."><textarea rows={8} value={draft.pages.map((p)=>p.url).join("\n")} onChange={(e)=>update({pages:e.target.value.split("\n").map((url,i)=>({id:"page-"+i,url:url.trim(),weight:1})).filter((p)=>p.url)})} className="w-full rounded-md border bg-background px-3 py-2 text-sm" placeholder={"https://seusite.com.br/\nhttps://seusite.com.br/produto"}/></Field>}
       {step===3&&<div className="grid gap-3 md:grid-cols-2">{[["direct","Direto"],["search","Busca"],["social","Social"],["referral","Referência"]].map(([type,label])=>{const exists=draft.sources.some((s)=>s.type===type);return <label key={type} className="flex items-center justify-between rounded-lg border p-4"><span className="font-medium">{label}</span><input type="checkbox" checked={exists} onChange={(e)=>update({sources:e.target.checked?[...draft.sources,{id:"src-"+type,type:type as CampaignDraft["sources"][number]["type"],label,weight:1}]:draft.sources.filter((s)=>s.type!==type)})}/></label>;})}</div>}
