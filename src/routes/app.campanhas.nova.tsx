@@ -29,9 +29,23 @@ function NewCampaign() {
   const schedule=(patch:Partial<CampaignDraft["schedule"]>)=>update({schedule:{...draft.schedule,...patch}});
   const validate=()=>{if(step===0&&(!draft.name.trim()||!draft.site_id||!draft.start_url.trim()))return "Informe nome, site e URL inicial.";if(step===1&&(draft.settings.pages_per_session<1||draft.settings.min_duration_sec<1||draft.settings.max_duration_sec<draft.settings.min_duration_sec))return "Revise os parâmetros da sessão.";if(step===5&&(draft.volume.daily_limit<1||draft.volume.interval_min_sec<1||draft.volume.interval_max_sec<draft.volume.interval_min_sec))return "Revise os parâmetros de volume.";if(step===6&&(!draft.schedule.start_time||!draft.schedule.end_time||draft.schedule.weekdays.length===0))return "Escolha horário e pelo menos um dia.";return "";};
   const next=()=>{const message=validate();if(message)return setError(message);setError("");setStep((s)=>Math.min(7,s+1));};
-  const save=(status:"draft"|"active")=>{const message=validate();if(message||!draft.name.trim()||!draft.site_id||!draft.start_url.trim())return setError(message||"Complete os campos obrigatórios.");const campaign=campaignRepo.create(draft,status);navigate({to:"/app/campanhas/$id",params:{id:campaign.id}});};
+  const [saving, setSaving] = useState(false);
+  const save = async (status:"draft"|"active") => {
+    const message=validate();
+    if(message||!draft.name.trim()||!draft.site_id||!draft.start_url.trim()) return setError(message||"Complete os campos obrigatórios.");
+    setError("");
+    setSaving(true);
+    try {
+      const campaign=await campaignRepo.create(draft,status);
+      await navigate({to:"/app/campanhas/$id",params:{id:campaign.id}});
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Não foi possível salvar a campanha.");
+    } finally {
+      setSaving(false);
+    }
+  };
   const toggleDay=(day:0|1|2|3|4|5|6)=>schedule({weekdays:draft.schedule.weekdays.includes(day)?draft.schedule.weekdays.filter((d)=>d!==day):[...draft.schedule.weekdays,day].sort() as CampaignDraft["schedule"]["weekdays"]});
-  return <div><DemoBanner>O assistente funciona no navegador e cria campanhas no armazenamento de demonstração. A execução real será ligada depois à API, fila e workers.</DemoBanner>
+  return <div>
     <PageHeader title="Nova campanha" description="Configure e revise uma jornada de teste em 8 etapas." />
     <div className="mb-6 grid gap-2 md:grid-cols-8">{steps.map((name,i)=><button key={name} type="button" onClick={()=>i<=step&&setStep(i)} className={"rounded-lg border p-3 text-left "+(i===step?"border-primary bg-primary/5":"bg-card")}><span className="font-mono text-xs text-primary">{"0"+(i+1)}</span><p className="mt-1 text-sm font-medium">{name}</p></button>)}</div>
     <Panel title={"Etapa "+(step+1)+" — "+steps[step]} description="Os dados ficam preparados para a futura persistência.">
@@ -44,6 +58,6 @@ function NewCampaign() {
       {step===6&&<div className="space-y-5"><div className="grid gap-5 md:grid-cols-3"><Field label="Início"><input type="time" value={draft.schedule.start_time} onChange={(e)=>schedule({start_time:e.target.value})} className="h-10 w-full rounded-md border bg-background px-3 text-sm"/></Field><Field label="Fim"><input type="time" value={draft.schedule.end_time} onChange={(e)=>schedule({end_time:e.target.value})} className="h-10 w-full rounded-md border bg-background px-3 text-sm"/></Field><Field label="Distribuição"><NativeSelect value={draft.schedule.distribution} onChange={(e)=>schedule({distribution:e.target.value as "even"|"peak"})}><option value="even">Uniforme</option><option value="peak">Picos</option></NativeSelect></Field></div><Field label="Dias"><div className="flex flex-wrap gap-2">{["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"].map((label,day)=><button key={label} type="button" onClick={()=>toggleDay(day as 0|1|2|3|4|5|6)} className={"rounded-full border px-3 py-1.5 text-sm "+(draft.schedule.weekdays.includes(day as 0|1|2|3|4|5|6)?"border-primary bg-primary text-primary-foreground":"")}>{label}</button>)}</div></Field></div>}
       {step===7&&<div className="grid gap-3 md:grid-cols-2">{[["Campanha",draft.name],["URL inicial",draft.start_url],["Sessões",String(draft.settings.total_sessions)],["Páginas/sessão",String(draft.settings.pages_per_session)],["Janela",draft.schedule.start_time+" — "+draft.schedule.end_time],["Créditos estimados",estimatedCredits.toLocaleString("pt-BR")]].map(([label,value])=><div key={label} className="rounded-lg border p-4"><span className="text-xs text-muted-foreground">{label}</span><p className="mt-1 break-all font-medium">{value||"—"}</p></div>)}</div>}
       {error&&<div role="alert" className="mt-5 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</div>}
-      <div className="mt-6 flex flex-col-reverse gap-2 border-t pt-5 sm:flex-row sm:justify-between"><button type="button" onClick={()=>step?setStep(step-1):navigate({to:"/app/campanhas"})} className="h-10 rounded-md border px-4 text-sm font-medium">Voltar</button><div className="flex gap-2"><button type="button" onClick={()=>save("draft")} className="h-10 rounded-md border px-4 text-sm font-medium">Salvar rascunho</button>{step<7?<button type="button" onClick={next} className="h-10 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">Continuar</button>:<button type="button" onClick={()=>save("active")} className="h-10 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">Ativar campanha</button>}</div></div>
+      <div className="mt-6 flex flex-col-reverse gap-2 border-t pt-5 sm:flex-row sm:justify-between"><button type="button" onClick={()=>step?setStep(step-1):navigate({to:"/app/campanhas"})} className="h-10 rounded-md border px-4 text-sm font-medium">Voltar</button><div className="flex gap-2"><button type="button" disabled={saving} onClick={()=>void save("draft")} className="h-10 rounded-md border px-4 text-sm font-medium disabled:opacity-60">Salvar rascunho</button>{step<7?<button type="button" onClick={next} className="h-10 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">Continuar</button>:<button type="button" disabled={saving} onClick={()=>void save("active")} className="h-10 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-60">{saving?"Salvando...":"Ativar campanha"}</button>}</div></div>
     </Panel></div>;
 }
