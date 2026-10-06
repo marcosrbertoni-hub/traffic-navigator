@@ -56,6 +56,9 @@ export const siteRepo = {
   update(id: ID, input: Partial<Pick<Site, "name" | "domain">>) {
     set({ ...state, sites: state.sites.map((s) => (s.id === id ? { ...s, ...input } : s)) });
   },
+  setAnalysis(id: ID, analysis: Site["analysis"]) {
+    set({ ...state, sites: state.sites.map((s) => (s.id === id ? { ...s, analysis, status: "verified", verified_at: s.verified_at ?? new Date().toISOString() } : s)) });
+  },
   remove(id: ID) {
     set({ ...state, sites: state.sites.filter((s) => s.id !== id) });
   },
