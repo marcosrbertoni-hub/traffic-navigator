@@ -14,11 +14,13 @@ Deno.serve(async (req) => {
   if (schedule.error) console.error("scheduler", schedule.error.message);
 
   const workerId = crypto.randomUUID();
+  const heartbeat = new Date().toISOString();
+
   await db.from("workers").upsert({
     id: workerId,
-    region: "edge",
+    name: `edge-${workerId.slice(0, 8)}`,
     status: "online",
-    last_heartbeat: new Date().toISOString(),
+    last_heartbeat_at: heartbeat,
   });
 
   const { data: job, error: claimError } = await db.rpc("claim_next_job", {
@@ -28,7 +30,7 @@ Deno.serve(async (req) => {
   if (claimError) {
     await db.from("workers").update({
       status: "offline",
-      last_heartbeat: new Date().toISOString(),
+      last_heartbeat_at: new Date().toISOString(),
     }).eq("id", workerId);
     return new Response(JSON.stringify({ error: claimError.message }), { status: 500 });
   }
@@ -36,9 +38,13 @@ Deno.serve(async (req) => {
   if (!job?.id) {
     await db.from("workers").update({
       status: "offline",
-      last_heartbeat: new Date().toISOString(),
+      last_heartbeat_at: new Date().toISOString(),
     }).eq("id", workerId);
-    return Response.json({ processed: false, scheduled: schedule.data ?? 0, message: "Fila vazia" });
+    return Response.json({
+      processed: false,
+      scheduled: schedule.data ?? 0,
+      message: "Fila vazia",
+    });
   }
 
   let { data: sessions, error: sessionError } = await db
@@ -49,11 +55,18 @@ Deno.serve(async (req) => {
     .order("created_at");
 
   if (sessionError) {
+    await db.from("job_runs").update({
+      status: "failed",
+      finished_at: new Date().toISOString(),
+      error: sessionError.message,
+    }).eq("job_id", job.id).eq("worker_id", workerId).is("finished_at", null);
+
     await db.from("jobs").update({
       status: "failed",
       finished_at: new Date().toISOString(),
       error: sessionError.message,
     }).eq("id", job.id);
+
     return new Response(JSON.stringify({ error: sessionError.message }), { status: 500 });
   }
 
@@ -71,11 +84,18 @@ Deno.serve(async (req) => {
 
     const { error } = await db.from("execution_sessions").insert(rows);
     if (error) {
+      await db.from("job_runs").update({
+        status: "failed",
+        finished_at: new Date().toISOString(),
+        error: error.message,
+      }).eq("job_id", job.id).eq("worker_id", workerId).is("finished_at", null);
+
       await db.from("jobs").update({
         status: "failed",
         finished_at: new Date().toISOString(),
         error: error.message,
       }).eq("id", job.id);
+
       return new Response(JSON.stringify({ error: error.message }), { status: 500 });
     }
 
@@ -101,19 +121,25 @@ Deno.serve(async (req) => {
     }).eq("id", session.id);
   }
 
+  const pagesVisited = (sessions ?? []).reduce((sum, s) => sum + s.planned_pages, 0);
+
   await db.from("job_runs").update({
+    status: "completed",
     finished_at: now,
-    pages_visited: (sessions ?? []).reduce((sum, s) => sum + s.planned_pages, 0),
+    metrics: {
+      sessions: sessions?.length ?? 0,
+      pages_visited: pagesVisited,
+    },
   }).eq("job_id", job.id).eq("worker_id", workerId).is("finished_at", null);
 
   await db.from("jobs").update({
-    status: "succeeded",
+    status: "completed",
     finished_at: now,
   }).eq("id", job.id);
 
   await db.from("workers").update({
     status: "offline",
-    last_heartbeat: now,
+    last_heartbeat_at: now,
   }).eq("id", workerId);
 
   return Response.json({
