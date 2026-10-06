@@ -69,6 +69,6 @@ export const analyzeSite = async (siteId: ID): Promise<SiteAnalysisResult | null
   if (!site) return null;
 
   const result = await analyzeSiteRemote({ data: { siteId, domain: site.domain } });
-  siteRepo.setAnalysis(siteId, result.analysis);
+  await siteRepo.setAnalysis(siteId, result.analysis);
   return result as SiteAnalysisResult;
 };
