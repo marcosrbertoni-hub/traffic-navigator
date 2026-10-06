@@ -1,0 +1,2 @@
+import { Outlet, createFileRoute } from "@tanstack/react-router"; import { AppShell } from "@/components/layout/AppShell"; import { ADMIN_NAV } from "@/config/navigation";
+export const Route=createFileRoute("/admin")({component:()=> <AppShell nav={ADMIN_NAV} home="/admin" badge="ADMIN"><Outlet/></AppShell>});
