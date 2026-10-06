@@ -15,7 +15,7 @@ function normalizeDomain(value: string) {
   const url = new URL(`https://${raw}`);
   if (url.username || url.password || !url.hostname) throw new Error("Domínio inválido.");
   const host = url.hostname.toLowerCase();
-  if (host === "localhost" || host.endsWith(".local") || host.endsWith(".internal")) {
+  if (host === "localhost" || host.endsWith(".local") || host.endsWith(".internal") || host === "::1" || host === "[::1]") {
     throw new Error("Domínios locais não podem ser analisados.");
   }
   if (/^(127\.|10\.|192\.168\.|169\.254\.)/.test(host)) {
@@ -28,15 +28,32 @@ function normalizeDomain(value: string) {
   return host;
 }
 
-async function fetchText(url: string) {
+async function fetchText(url: string, allowedHost: string, redirects = 0): Promise<{ response: Response; text: string }> {
+  if (redirects > 3) throw new Error("Muitos redirecionamentos.");
+  const target = new URL(url);
+  if (target.protocol !== "http:" && target.protocol !== "https:" || target.hostname.toLowerCase() !== allowedHost) {
+    throw new Error("Destino fora do domínio autorizado.");
+  }
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
   try {
     const response = await fetch(url, {
       signal: controller.signal,
-      redirect: "follow",
+      redirect: "manual",
       headers: { "user-agent": "TrafficNavigator-SiteAnalyzer/1.0" },
     });
+
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get("location");
+      if (!location) return { response, text: "" };
+      const next = new URL(location, url);
+      if (next.hostname.toLowerCase() !== allowedHost || !["http:", "https:"].includes(next.protocol)) {
+        throw new Error("Redirecionamento fora do domínio autorizado.");
+      }
+      return fetchText(next.toString(), allowedHost, redirects + 1);
+    }
+
     return { response, text: await response.text() };
   } finally {
     clearTimeout(timer);
@@ -59,7 +76,7 @@ function toAbsoluteUrl(value: string, base: string) {
   }
 }
 
-function extractInternalLinks(html: string, origin: string) {
+function extractTitle(html: string) {\n  return html.match(/<title[^>]*>\\s*([^<]+?)\\s*<\\/title>/i)?.[1]?.trim() ?? "";\n}\n\nfunction extractInternalLinks(html: string, origin: string) {
   const links = new Set<string>();
   for (const match of html.matchAll(/href\s*=\s*["']([^"']+)["']/gi)) {
     const href = toAbsoluteUrl(match[1], origin);
@@ -82,7 +99,7 @@ export const analyzeSiteRemote = createServerFn({ method: "POST" })
     let sitemapLocs: string[] = [];
 
     try {
-      const sitemap = await fetchText(defaultSitemapUrl);
+      const sitemap = await fetchText(defaultSitemapUrl, domain);
       if (sitemap.response.ok && /<loc[\s>]/i.test(sitemap.text)) {
         sitemapFound = true;
         sitemapUrl = defaultSitemapUrl;
@@ -91,7 +108,7 @@ export const analyzeSiteRemote = createServerFn({ method: "POST" })
         if (isIndex) {
           for (const child of locs.slice(0, MAX_SITEMAPS)) {
             try {
-              const childResult = await fetchText(child);
+              const childResult = await fetchText(child, domain);
               if (childResult.response.ok) sitemapLocs.push(...extractLocs(childResult.text));
             } catch {
               notes.push(`Não foi possível ler o sitemap ${child}.`);
@@ -107,13 +124,13 @@ export const analyzeSiteRemote = createServerFn({ method: "POST" })
 
     let robotsAvailable = false;
     try {
-      const robots = await fetchText(robotsUrl);
+      const robots = await fetchText(robotsUrl, domain);
       robotsAvailable = robots.response.ok;
       if (robotsAvailable) {
         const robotsSitemap = robots.text.match(/^\s*sitemap:\s*(\S+)\s*$/im)?.[1];
         if (!sitemapFound && robotsSitemap) {
           try {
-            const candidate = await fetchText(robotsSitemap);
+            const candidate = await fetchText(robotsSitemap, domain);
             if (candidate.response.ok) {
               sitemapFound = true;
               sitemapUrl = robotsSitemap;
@@ -134,13 +151,13 @@ export const analyzeSiteRemote = createServerFn({ method: "POST" })
 
     const urls = await Promise.all(uniqueUrls.map(async (url, index) => {
       try {
-        const result = await fetchText(url);
+        const result = await fetchText(url, domain);
         const status = result.response.redirected ? "redirect" : result.response.ok ? "accessible" : "error";
         return {
           id: `${data.siteId}-url-${index + 1}`,
           url,
           path: new URL(url).pathname || "/",
-          title: "",
+          title: result.response.ok ? extractTitle(result.text) : "",
           status: status as "accessible" | "redirect" | "error",
           internal_links: result.response.ok && /<html|<body|<a\s/i.test(result.text) ? extractInternalLinks(result.text, base) : 0,
         };
