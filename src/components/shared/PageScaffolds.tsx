@@ -1,9 +1,10 @@
+import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, BarChart3, Globe2, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader, Panel, StatCard, DemoBanner } from "@/components/shared/kit";
 
-export function PublicPage({ title, description, children }: { title: string; description: string; children?: React.ReactNode }) {
+export function PublicPage({ title, description, children }: { title: string; description: string; children?: ReactNode }) {
   return <div><div className="mx-auto max-w-6xl px-4 py-14"><PageHeader title={title} description={description} />{children}</div></div>;
 }
 
