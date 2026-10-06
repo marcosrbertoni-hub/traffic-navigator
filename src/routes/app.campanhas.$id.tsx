@@ -22,9 +22,11 @@ function CampaignDetail(){
     try {
       await campaignRepo.setStatus(id,"active");
       const jobId=await enqueueCampaign(id);
-      const planned=planSessions(campaign, Math.min(campaign.volume.daily_limit, campaign.settings.total_sessions));\n      await createPlannedSessions(jobId, campaign.id, planned);
+      const planned=planSessions(campaign, Math.min(campaign.volume.daily_limit, campaign.settings.total_sessions));
+      await createPlannedSessions(jobId, campaign.id, planned);
       setMessage(`Campanha ativada e colocada na fila. Job: ${jobId.slice(0,8)}…`);
     } catch(err) {
+      try { await campaignRepo.setStatus(id,"draft"); } catch {}
       setMessage(err instanceof Error ? err.message : "Não foi possível iniciar a campanha.");
     } finally { setLoading(false); }
   };
