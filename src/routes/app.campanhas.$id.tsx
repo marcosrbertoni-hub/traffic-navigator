@@ -21,7 +21,8 @@ function CampaignDetail(){
     setLoading(true); setMessage("");
     try {
       await campaignRepo.setStatus(id,"active");
-      const jobId=await enqueueCampaign(id);\n      const planned=planSessions(campaign, Math.min(campaign.volume.daily_limit, campaign.settings.total_sessions));\n      await createPlannedSessions(jobId, campaign.id, planned);
+      const jobId=await enqueueCampaign(id);
+      const planned=planSessions(campaign, Math.min(campaign.volume.daily_limit, campaign.settings.total_sessions));\n      await createPlannedSessions(jobId, campaign.id, planned);
       setMessage(`Campanha ativada e colocada na fila. Job: ${jobId.slice(0,8)}…`);
     } catch(err) {
       setMessage(err instanceof Error ? err.message : "Não foi possível iniciar a campanha.");
