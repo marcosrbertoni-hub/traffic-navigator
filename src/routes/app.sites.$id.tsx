@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { DemoBanner, EmptyState, PageHeader, Panel, StatCard, StatusBadge } from "@/components/shared/kit";
 import { getSite } from "@/services/campaigns";
-import { analyzeSiteDemo, type SiteAnalysisResult } from "@/services/site-analysis";
+import { analyzeSite, type SiteAnalysisResult } from "@/services/site-analysis";
 import { setCampaignPrefill } from "@/services/campaign-prefill";
 
 export const Route = createFileRoute("/app/sites/$id")({ component: SiteDetails });
@@ -16,14 +16,23 @@ function SiteDetails() {
 
   if (!site) return <EmptyState title="Site não encontrado" description="O domínio solicitado não existe no ambiente atual." action={<Button asChild><Link to="/app/sites">Voltar para sites</Link></Button>} />;
 
-  const current = result ?? (site.analysis ? analyzeSiteDemo(id) : null);
+  const current = result;
   const urls = current?.urls ?? [];
   const allSelected = urls.length > 0 && selected.length === urls.length;
 
-  const runAnalysis = () => {
-    const next = analyzeSiteDemo(id);
-    setResult(next);
-    setSelected(next?.urls.map((url) => url.id) ?? []);
+  const [analyzing, setAnalyzing] = useState(false);
+
+  const runAnalysis = async () => {
+    setAnalyzing(true);
+    try {
+      const next = await analyzeSite(id);
+      setResult(next);
+      setSelected(next?.urls.map((url) => url.id) ?? []);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setAnalyzing(false);
+    }
   };
 
   const toggleUrl = (urlId: string) => setSelected((items) => items.includes(urlId) ? items.filter((item) => item !== urlId) : [...items, urlId]);
@@ -40,8 +49,8 @@ function SiteDetails() {
   ] : [];
 
   return <div>
-    <DemoBanner>A análise exibida nesta etapa é demonstrativa. O crawler real ficará no backend e só analisará domínios autorizados.</DemoBanner>
-    <PageHeader title={site.name} description={site.domain} actions={<div className="flex gap-2"><Button variant="outline" asChild><Link to="/app/sites">Voltar</Link></Button><Button onClick={runAnalysis}>Analisar domínio</Button></div>} />
+    
+    <PageHeader title={site.name} description={site.domain} actions={<div className="flex gap-2"><Button variant="outline" asChild><Link to="/app/sites">Voltar</Link></Button><Button onClick={runAnalysis} disabled={analyzing}>{analyzing ? "Analisando..." : "Analisar domínio"}</Button></div>} />
 
     <div className="grid gap-4 md:grid-cols-3">{stats.length ? stats.map(([label, value]) => <StatCard key={String(label)} label={String(label)} value={value} />) : <Panel className="md:col-span-3"><p className="text-sm text-muted-foreground">Execute a análise para descobrir as páginas do domínio.</p></Panel>}</div>
 
