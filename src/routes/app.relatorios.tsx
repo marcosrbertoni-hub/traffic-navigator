@@ -1,0 +1,1 @@
+import { createFileRoute } from "@tanstack/react-router"; import { AppOverview } from "@/components/shared/PageScaffolds"; export const Route=createFileRoute("/app/relatorios")({component:()=> <AppOverview title="Relatórios" description="Indicadores preparados para receber dados reais das execuções."/>});
