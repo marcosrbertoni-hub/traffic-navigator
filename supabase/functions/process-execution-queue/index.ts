@@ -9,8 +9,11 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
-  const workerId = crypto.randomUUID();
 
+  const schedule = await db.rpc("schedule_due_campaigns");
+  if (schedule.error) console.error("scheduler", schedule.error.message);
+
+  const workerId = crypto.randomUUID();
   await db.from("workers").upsert({
     id: workerId,
     region: "edge",
@@ -35,10 +38,10 @@ Deno.serve(async (req) => {
       status: "offline",
       last_heartbeat: new Date().toISOString(),
     }).eq("id", workerId);
-    return Response.json({ processed: false, message: "Fila vazia" });
+    return Response.json({ processed: false, scheduled: schedule.data ?? 0, message: "Fila vazia" });
   }
 
-  const { data: sessions, error: sessionError } = await db
+  let { data: sessions, error: sessionError } = await db
     .from("execution_sessions")
     .select("id,planned_pages,planned_duration_sec")
     .eq("job_id", job.id)
@@ -52,6 +55,38 @@ Deno.serve(async (req) => {
       error: sessionError.message,
     }).eq("id", job.id);
     return new Response(JSON.stringify({ error: sessionError.message }), { status: 500 });
+  }
+
+  if (!sessions?.length) {
+    const requested = Math.max(Number(job.payload?.requested_sessions ?? 1), 1);
+    const rows = Array.from({ length: Math.min(requested, 100) }, (_, index) => ({
+      job_id: job.id,
+      campaign_id: job.campaign_id,
+      status: "queued",
+      planned_pages: 1 + (index % 3),
+      planned_duration_sec: 20 + ((index * 17) % 101),
+      device: index % 3 === 0 ? "mobile" : "desktop",
+      journey: { mode: "simulation", step: index + 1 },
+    }));
+
+    const { error } = await db.from("execution_sessions").insert(rows);
+    if (error) {
+      await db.from("jobs").update({
+        status: "failed",
+        finished_at: new Date().toISOString(),
+        error: error.message,
+      }).eq("id", job.id);
+      return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    }
+
+    const result = await db
+      .from("execution_sessions")
+      .select("id,planned_pages,planned_duration_sec")
+      .eq("job_id", job.id)
+      .eq("status", "queued")
+      .order("created_at");
+
+    sessions = result.data ?? [];
   }
 
   const now = new Date().toISOString();
@@ -83,6 +118,7 @@ Deno.serve(async (req) => {
 
   return Response.json({
     processed: true,
+    scheduled: schedule.data ?? 0,
     job_id: job.id,
     sessions: sessions?.length ?? 0,
   });
