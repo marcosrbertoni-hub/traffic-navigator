@@ -28,8 +28,6 @@ where price_monthly is null or credits_monthly = 0;
 alter table public.job_runs
   add column if not exists worker_id text;
 
-create index if not exists execution_sessions_job_id_idx
-  on public.execution_sessions(job_id);
 create index if not exists execution_sessions_campaign_id_idx
   on public.execution_sessions(campaign_id);
 create index if not exists jobs_campaign_status_idx
