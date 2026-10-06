@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { PageHeader, Panel, StatusBadge } from "@/components/shared/kit";
 import { getCampaign, campaignRepo } from "@/services/campaigns";
 import { enqueueCampaign } from "@/services/execution";
+import { planSessions } from "@/services/execution-engine";
+import { createPlannedSessions } from "@/services/execution-queue";
 
 export const Route=createFileRoute("/app/campanhas/$id")({component:CampaignDetail});
 
@@ -19,7 +21,7 @@ function CampaignDetail(){
     setLoading(true); setMessage("");
     try {
       await campaignRepo.setStatus(id,"active");
-      const jobId=await enqueueCampaign(id);
+      const jobId=await enqueueCampaign(id);\n      const planned=planSessions(campaign, Math.min(campaign.volume.daily_limit, campaign.settings.total_sessions));\n      await createPlannedSessions(jobId, campaign.id, planned);
       setMessage(`Campanha ativada e colocada na fila. Job: ${jobId.slice(0,8)}…`);
     } catch(err) {
       setMessage(err instanceof Error ? err.message : "Não foi possível iniciar a campanha.");
