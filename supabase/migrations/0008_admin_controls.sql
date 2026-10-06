@@ -60,3 +60,7 @@ end;
 $$;
 revoke all on function public.admin_grant_credits(uuid, integer, text) from public, anon;
 grant execute on function public.admin_grant_credits(uuid, integer, text) to authenticated;
+
+
+ drop policy if exists credit_balances_admin_select on public.credit_balances;
+create policy credit_balances_admin_select on public.credit_balances for select to authenticated using ((user_id = (select auth.uid())) or public.is_admin());
