@@ -8,7 +8,7 @@ export const Route = createFileRoute("/admin")({
   beforeLoad: async ({ location }) => {
     const session = await getSession();
     if (!session) {
-      throw redirect({ to: "/login", search: { redirect: location.href } });
+      throw redirect({ to: "/login" });
     }
 
     const { data: profile, error } = await supabase
