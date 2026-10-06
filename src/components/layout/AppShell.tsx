@@ -1,15 +1,17 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, type LinkProps } from "@tanstack/react-router";
 import type { LucideIcon } from "lucide-react";
-import { Menu, X } from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
 import { Logo } from "./Logo";
 import { cn } from "@/lib/utils";
+import { onAuthStateChange, signOut } from "@/services/auth";
 
 export type NavItem = { to: NonNullable<LinkProps["to"]>; label: string; icon: LucideIcon; exact?: boolean };
 
 /** Shared shell for the client area and the admin panel (sidebar + topbar). */
 export function AppShell({ nav, home, badge, footer, children }: { nav: NavItem[]; home: "/app" | "/admin"; badge?: string; footer?: ReactNode; children: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [email, setEmail] = useState("");
   const sidebar = (
     <div className="flex h-full flex-col bg-ink-gradient text-ink-foreground">
       <div className="flex h-16 items-center justify-between px-5">
@@ -34,6 +36,17 @@ export function AppShell({ nav, home, badge, footer, children }: { nav: NavItem[
       {footer && <div className="border-t border-ink-line p-4">{footer}</div>}
     </div>
   );
+
+  useEffect(() => {
+    const { data } = onAuthStateChange((session) => setEmail(session?.user.email ?? ""));
+    return () => data.subscription.unsubscribe();
+  }, []);
+
+  async function handleSignOut() {
+    await signOut();
+    window.location.assign("/login");
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 lg:block">{sidebar}</aside>
@@ -49,8 +62,13 @@ export function AppShell({ nav, home, badge, footer, children }: { nav: NavItem[
             {open ? <X className="size-5" /> : <Menu className="size-5" />}
           </button>
           <div className="ml-auto flex items-center gap-3">
-            <span className="hidden text-sm text-muted-foreground sm:inline">Conta demonstrativa</span>
-            <span className="grid size-9 place-items-center rounded-full bg-accent text-sm font-semibold text-accent-foreground">DM</span>
+            <span className="hidden max-w-56 truncate text-sm text-muted-foreground sm:inline">{email || "Conta"}</span>
+            <button type="button" onClick={handleSignOut} title="Sair" className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground">
+              <LogOut className="size-4" />
+            </button>
+            <span className="grid size-9 place-items-center rounded-full bg-accent text-sm font-semibold text-accent-foreground">
+              {(email[0] ?? "U").toUpperCase()}
+            </span>
           </div>
         </header>
         <main className="mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-8">{children}</main>
