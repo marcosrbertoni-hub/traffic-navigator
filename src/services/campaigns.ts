@@ -8,12 +8,14 @@ import { useSyncExternalStore } from "react";
 import type { Campaign, CampaignDraft, CampaignStatus, ID, Site } from "@/domain/types";
 import { DEMO_USER_ID, demoCampaigns, demoSites } from "@/mocks/demo";
 import { uid } from "@/lib/format";
+import { loadPersistedState, savePersistedState } from "@/services/storage";
 
 type State = { campaigns: Campaign[]; sites: Site[] };
-let state: State = { campaigns: demoCampaigns, sites: demoSites };
+let state: State = loadPersistedState({ campaigns: demoCampaigns, sites: demoSites });
 const listeners = new Set<() => void>();
 const set = (next: State) => {
   state = next;
+  savePersistedState(state);
   listeners.forEach((l) => l());
 };
 const subscribe = (l: () => void) => {
