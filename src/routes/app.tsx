@@ -1,0 +1,2 @@
+import { Outlet, createFileRoute } from "@tanstack/react-router"; import { AppShell } from "@/components/layout/AppShell"; import { APP_NAV } from "@/config/navigation";
+export const Route=createFileRoute("/app")({component:()=> <AppShell nav={APP_NAV} home="/app"><Outlet/></AppShell>});
