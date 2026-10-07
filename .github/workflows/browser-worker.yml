@@ -1,0 +1,35 @@
+name: Traffic Navigator Browser Worker
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"
+
+concurrency:
+  group: traffic-navigator-browser-worker
+  cancel-in-progress: false
+
+jobs:
+  browser-worker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_URL: \${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: \${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install browser worker dependencies
+        run: npm install --no-save playwright@1.63.0 @supabase/supabase-js@2.76.1
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser worker
+        run: node --experimental-strip-types scripts/browser-worker.ts
