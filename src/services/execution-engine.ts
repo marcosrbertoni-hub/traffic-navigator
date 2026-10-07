@@ -9,7 +9,7 @@ export type PlannedSession = {
 };
 
 function pick<T>(items: T[], index: number): T {
-  return items[index % items.length];
+  return items[index % items.length] as T;
 }
 
 export function planSessions(campaign: Campaign, count: number): PlannedSession[] {

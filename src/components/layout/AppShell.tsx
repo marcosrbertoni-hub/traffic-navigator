@@ -24,7 +24,7 @@ export function AppShell({ nav, home, badge, footer, children }: { nav: NavItem[
             key={item.label}
             to={item.to}
             onClick={() => setOpen(false)}
-            activeOptions={{ exact: item.exact }}
+            activeOptions={{ exact: item.exact ?? false }}
             className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-ink-muted transition-colors hover:bg-sidebar-accent hover:text-ink-foreground"
             activeProps={{ className: "bg-sidebar-accent !text-ink-foreground font-medium" }}
           >
