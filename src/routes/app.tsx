@@ -13,7 +13,11 @@ export const Route = createFileRoute("/app")({
         search: { redirect: location.href },
       });
     }
-    await hydrateBackendState();
+    // A falha de hidratação não pode bloquear a abertura das rotas do aplicativo.
+    // Cada tela que grava dados trata seus próprios erros diretamente no Supabase.
+    void hydrateBackendState().catch((error) => {
+      console.error("Falha ao carregar dados do aplicativo:", error);
+    });
     return { session };
   },
   component: () => (
