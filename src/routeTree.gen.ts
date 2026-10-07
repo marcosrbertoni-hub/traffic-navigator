@@ -10,32 +10,486 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SiteRouteImport } from './routes/_site'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AppRouteImport } from './routes/app'
+import { Route as SiteIndexRouteImport } from './routes/_site.index'
+import { Route as SiteCadastroRouteImport } from './routes/_site.cadastro'
+import { Route as SiteComoFuncionaRouteImport } from './routes/_site.como-funciona'
+import { Route as SiteContatoRouteImport } from './routes/_site.contato'
+import { Route as SiteFaqRouteImport } from './routes/_site.faq'
+import { Route as SiteLoginRouteImport } from './routes/_site.login'
+import { Route as SitePlanosRouteImport } from './routes/_site.planos'
+import { Route as SitePrivacidadeRouteImport } from './routes/_site.privacidade'
+import { Route as SitePublicRouteImport } from './routes/_site.public'
+import { Route as SiteRecuperarSenhaRouteImport } from './routes/_site.recuperar-senha'
+import { Route as SiteRecursosRouteImport } from './routes/_site.recursos'
+import { Route as SiteTermosRouteImport } from './routes/_site.termos'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminCampanhasRouteImport } from './routes/admin.campanhas'
+import { Route as AdminConfiguracoesRouteImport } from './routes/admin.configuracoes'
+import { Route as AdminCreditosRouteImport } from './routes/admin.creditos'
+import { Route as AdminLogsRouteImport } from './routes/admin.logs'
+import { Route as AdminPagamentosRouteImport } from './routes/admin.pagamentos'
+import { Route as AdminPlanosRouteImport } from './routes/admin.planos'
+import { Route as AdminSitesRouteImport } from './routes/admin.sites'
+import { Route as AdminTarefasRouteImport } from './routes/admin.tarefas'
+import { Route as AdminUsuariosRouteImport } from './routes/admin.usuarios'
+import { Route as AdminWorkersRouteImport } from './routes/admin.workers'
+import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppAjudaRouteImport } from './routes/app.ajuda'
+import { Route as AppCampanhasRouteImport } from './routes/app.campanhas'
+import { Route as AppConfiguracoesRouteImport } from './routes/app.configuracoes'
+import { Route as AppCreditosRouteImport } from './routes/app.creditos'
+import { Route as AppPagamentosRouteImport } from './routes/app.pagamentos'
+import { Route as AppPlanosRouteImport } from './routes/app.planos'
+import { Route as AppRelatoriosRouteImport } from './routes/app.relatorios'
+import { Route as AppSitesRouteImport } from './routes/app.sites'
+import { Route as AppCampanhasIdRouteImport } from './routes/app.campanhas.$id'
+import { Route as AppCampanhasNovaRouteImport } from './routes/app.campanhas.nova'
+import { Route as AppSitesIdRouteImport } from './routes/app.sites.$id'
+import { Route as AppSitesNovoRouteImport } from './routes/app.sites.novo'
 
 const SiteRoute = SiteRouteImport.update({
   id: '/_site',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SiteIndexRoute = SiteIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SiteCadastroRoute = SiteCadastroRouteImport.update({
+  id: '/cadastro',
+  path: '/cadastro',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SiteComoFuncionaRoute = SiteComoFuncionaRouteImport.update({
+  id: '/como-funciona',
+  path: '/como-funciona',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SiteContatoRoute = SiteContatoRouteImport.update({
+  id: '/contato',
+  path: '/contato',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SiteFaqRoute = SiteFaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SiteLoginRoute = SiteLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SitePlanosRoute = SitePlanosRouteImport.update({
+  id: '/planos',
+  path: '/planos',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SitePrivacidadeRoute = SitePrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SitePublicRoute = SitePublicRouteImport.update({
+  id: '/public',
+  path: '/public',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SiteRecuperarSenhaRoute = SiteRecuperarSenhaRouteImport.update({
+  id: '/recuperar-senha',
+  path: '/recuperar-senha',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SiteRecursosRoute = SiteRecursosRouteImport.update({
+  id: '/recursos',
+  path: '/recursos',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SiteTermosRoute = SiteTermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
+  getParentRoute: () => SiteRoute,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCampanhasRoute = AdminCampanhasRouteImport.update({
+  id: '/campanhas',
+  path: '/campanhas',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminConfiguracoesRoute = AdminConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminCreditosRoute = AdminCreditosRouteImport.update({
+  id: '/creditos',
+  path: '/creditos',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLogsRoute = AdminLogsRouteImport.update({
+  id: '/logs',
+  path: '/logs',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPagamentosRoute = AdminPagamentosRouteImport.update({
+  id: '/pagamentos',
+  path: '/pagamentos',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPlanosRoute = AdminPlanosRouteImport.update({
+  id: '/planos',
+  path: '/planos',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSitesRoute = AdminSitesRouteImport.update({
+  id: '/sites',
+  path: '/sites',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTarefasRoute = AdminTarefasRouteImport.update({
+  id: '/tarefas',
+  path: '/tarefas',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUsuariosRoute = AdminUsuariosRouteImport.update({
+  id: '/usuarios',
+  path: '/usuarios',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminWorkersRoute = AdminWorkersRouteImport.update({
+  id: '/workers',
+  path: '/workers',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAjudaRoute = AppAjudaRouteImport.update({
+  id: '/ajuda',
+  path: '/ajuda',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCampanhasRoute = AppCampanhasRouteImport.update({
+  id: '/campanhas',
+  path: '/campanhas',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppConfiguracoesRoute = AppConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCreditosRoute = AppCreditosRouteImport.update({
+  id: '/creditos',
+  path: '/creditos',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPagamentosRoute = AppPagamentosRouteImport.update({
+  id: '/pagamentos',
+  path: '/pagamentos',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPlanosRoute = AppPlanosRouteImport.update({
+  id: '/planos',
+  path: '/planos',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRelatoriosRoute = AppRelatoriosRouteImport.update({
+  id: '/relatorios',
+  path: '/relatorios',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSitesRoute = AppSitesRouteImport.update({
+  id: '/sites',
+  path: '/sites',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCampanhasIdRoute = AppCampanhasIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppCampanhasRoute,
+} as any)
+const AppCampanhasNovaRoute = AppCampanhasNovaRouteImport.update({
+  id: '/nova',
+  path: '/nova',
+  getParentRoute: () => AppCampanhasRoute,
+} as any)
+const AppSitesIdRoute = AppSitesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppSitesRoute,
+} as any)
+const AppSitesNovoRoute = AppSitesNovoRouteImport.update({
+  id: '/novo',
+  path: '/novo',
+  getParentRoute: () => AppSitesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof SiteRoute
+  '/': typeof SiteIndexRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/app': typeof AppRouteWithChildren
+  '/cadastro': typeof SiteCadastroRoute
+  '/como-funciona': typeof SiteComoFuncionaRoute
+  '/contato': typeof SiteContatoRoute
+  '/faq': typeof SiteFaqRoute
+  '/login': typeof SiteLoginRoute
+  '/planos': typeof SitePlanosRoute
+  '/privacidade': typeof SitePrivacidadeRoute
+  '/public': typeof SitePublicRoute
+  '/recuperar-senha': typeof SiteRecuperarSenhaRoute
+  '/recursos': typeof SiteRecursosRoute
+  '/termos': typeof SiteTermosRoute
+  '/admin/campanhas': typeof AdminCampanhasRoute
+  '/admin/configuracoes': typeof AdminConfiguracoesRoute
+  '/admin/creditos': typeof AdminCreditosRoute
+  '/admin/logs': typeof AdminLogsRoute
+  '/admin/pagamentos': typeof AdminPagamentosRoute
+  '/admin/planos': typeof AdminPlanosRoute
+  '/admin/sites': typeof AdminSitesRoute
+  '/admin/tarefas': typeof AdminTarefasRoute
+  '/admin/usuarios': typeof AdminUsuariosRoute
+  '/admin/workers': typeof AdminWorkersRoute
+  '/app/ajuda': typeof AppAjudaRoute
+  '/app/campanhas': typeof AppCampanhasRouteWithChildren
+  '/app/configuracoes': typeof AppConfiguracoesRoute
+  '/app/creditos': typeof AppCreditosRoute
+  '/app/pagamentos': typeof AppPagamentosRoute
+  '/app/planos': typeof AppPlanosRoute
+  '/app/relatorios': typeof AppRelatoriosRoute
+  '/app/sites': typeof AppSitesRouteWithChildren
+  '/admin/': typeof AdminIndexRoute
+  '/app/': typeof AppIndexRoute
+  '/app/campanhas/$id': typeof AppCampanhasIdRoute
+  '/app/campanhas/nova': typeof AppCampanhasNovaRoute
+  '/app/sites/$id': typeof AppSitesIdRoute
+  '/app/sites/novo': typeof AppSitesNovoRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof SiteRoute
+  '/cadastro': typeof SiteCadastroRoute
+  '/como-funciona': typeof SiteComoFuncionaRoute
+  '/contato': typeof SiteContatoRoute
+  '/faq': typeof SiteFaqRoute
+  '/login': typeof SiteLoginRoute
+  '/planos': typeof SitePlanosRoute
+  '/privacidade': typeof SitePrivacidadeRoute
+  '/public': typeof SitePublicRoute
+  '/recuperar-senha': typeof SiteRecuperarSenhaRoute
+  '/recursos': typeof SiteRecursosRoute
+  '/termos': typeof SiteTermosRoute
+  '/admin/campanhas': typeof AdminCampanhasRoute
+  '/admin/configuracoes': typeof AdminConfiguracoesRoute
+  '/admin/creditos': typeof AdminCreditosRoute
+  '/admin/logs': typeof AdminLogsRoute
+  '/admin/pagamentos': typeof AdminPagamentosRoute
+  '/admin/planos': typeof AdminPlanosRoute
+  '/admin/sites': typeof AdminSitesRoute
+  '/admin/tarefas': typeof AdminTarefasRoute
+  '/admin/usuarios': typeof AdminUsuariosRoute
+  '/admin/workers': typeof AdminWorkersRoute
+  '/app/ajuda': typeof AppAjudaRoute
+  '/app/campanhas': typeof AppCampanhasRouteWithChildren
+  '/app/configuracoes': typeof AppConfiguracoesRoute
+  '/app/creditos': typeof AppCreditosRoute
+  '/app/pagamentos': typeof AppPagamentosRoute
+  '/app/planos': typeof AppPlanosRoute
+  '/app/relatorios': typeof AppRelatoriosRoute
+  '/app/sites': typeof AppSitesRouteWithChildren
+  '/': typeof SiteIndexRoute
+  '/admin': typeof AdminIndexRoute
+  '/app': typeof AppIndexRoute
+  '/app/campanhas/$id': typeof AppCampanhasIdRoute
+  '/app/campanhas/nova': typeof AppCampanhasNovaRoute
+  '/app/sites/$id': typeof AppSitesIdRoute
+  '/app/sites/novo': typeof AppSitesNovoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/_site': typeof SiteRoute
+  '/_site': typeof SiteRouteWithChildren
+  '/admin': typeof AdminRouteWithChildren
+  '/app': typeof AppRouteWithChildren
+  '/_site/cadastro': typeof SiteCadastroRoute
+  '/_site/como-funciona': typeof SiteComoFuncionaRoute
+  '/_site/contato': typeof SiteContatoRoute
+  '/_site/faq': typeof SiteFaqRoute
+  '/_site/login': typeof SiteLoginRoute
+  '/_site/planos': typeof SitePlanosRoute
+  '/_site/privacidade': typeof SitePrivacidadeRoute
+  '/_site/public': typeof SitePublicRoute
+  '/_site/recuperar-senha': typeof SiteRecuperarSenhaRoute
+  '/_site/recursos': typeof SiteRecursosRoute
+  '/_site/termos': typeof SiteTermosRoute
+  '/admin/campanhas': typeof AdminCampanhasRoute
+  '/admin/configuracoes': typeof AdminConfiguracoesRoute
+  '/admin/creditos': typeof AdminCreditosRoute
+  '/admin/logs': typeof AdminLogsRoute
+  '/admin/pagamentos': typeof AdminPagamentosRoute
+  '/admin/planos': typeof AdminPlanosRoute
+  '/admin/sites': typeof AdminSitesRoute
+  '/admin/tarefas': typeof AdminTarefasRoute
+  '/admin/usuarios': typeof AdminUsuariosRoute
+  '/admin/workers': typeof AdminWorkersRoute
+  '/app/ajuda': typeof AppAjudaRoute
+  '/app/campanhas': typeof AppCampanhasRouteWithChildren
+  '/app/configuracoes': typeof AppConfiguracoesRoute
+  '/app/creditos': typeof AppCreditosRoute
+  '/app/pagamentos': typeof AppPagamentosRoute
+  '/app/planos': typeof AppPlanosRoute
+  '/app/relatorios': typeof AppRelatoriosRoute
+  '/app/sites': typeof AppSitesRouteWithChildren
+  '/_site/': typeof SiteIndexRoute
+  '/admin/': typeof AdminIndexRoute
+  '/app/': typeof AppIndexRoute
+  '/app/campanhas/$id': typeof AppCampanhasIdRoute
+  '/app/campanhas/nova': typeof AppCampanhasNovaRoute
+  '/app/sites/$id': typeof AppSitesIdRoute
+  '/app/sites/novo': typeof AppSitesNovoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/app'
+    | '/cadastro'
+    | '/como-funciona'
+    | '/contato'
+    | '/faq'
+    | '/login'
+    | '/planos'
+    | '/privacidade'
+    | '/public'
+    | '/recuperar-senha'
+    | '/recursos'
+    | '/termos'
+    | '/admin/campanhas'
+    | '/admin/configuracoes'
+    | '/admin/creditos'
+    | '/admin/logs'
+    | '/admin/pagamentos'
+    | '/admin/planos'
+    | '/admin/sites'
+    | '/admin/tarefas'
+    | '/admin/usuarios'
+    | '/admin/workers'
+    | '/app/ajuda'
+    | '/app/campanhas'
+    | '/app/configuracoes'
+    | '/app/creditos'
+    | '/app/pagamentos'
+    | '/app/planos'
+    | '/app/relatorios'
+    | '/app/sites'
+    | '/admin/'
+    | '/app/'
+    | '/app/campanhas/$id'
+    | '/app/campanhas/nova'
+    | '/app/sites/$id'
+    | '/app/sites/novo'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/_site'
+  to:
+    | '/cadastro'
+    | '/como-funciona'
+    | '/contato'
+    | '/faq'
+    | '/login'
+    | '/planos'
+    | '/privacidade'
+    | '/public'
+    | '/recuperar-senha'
+    | '/recursos'
+    | '/termos'
+    | '/admin/campanhas'
+    | '/admin/configuracoes'
+    | '/admin/creditos'
+    | '/admin/logs'
+    | '/admin/pagamentos'
+    | '/admin/planos'
+    | '/admin/sites'
+    | '/admin/tarefas'
+    | '/admin/usuarios'
+    | '/admin/workers'
+    | '/app/ajuda'
+    | '/app/campanhas'
+    | '/app/configuracoes'
+    | '/app/creditos'
+    | '/app/pagamentos'
+    | '/app/planos'
+    | '/app/relatorios'
+    | '/app/sites'
+    | '/'
+    | '/admin'
+    | '/app'
+    | '/app/campanhas/$id'
+    | '/app/campanhas/nova'
+    | '/app/sites/$id'
+    | '/app/sites/novo'
+  id:
+    | '__root__'
+    | '/_site'
+    | '/admin'
+    | '/app'
+    | '/_site/cadastro'
+    | '/_site/como-funciona'
+    | '/_site/contato'
+    | '/_site/faq'
+    | '/_site/login'
+    | '/_site/planos'
+    | '/_site/privacidade'
+    | '/_site/public'
+    | '/_site/recuperar-senha'
+    | '/_site/recursos'
+    | '/_site/termos'
+    | '/admin/campanhas'
+    | '/admin/configuracoes'
+    | '/admin/creditos'
+    | '/admin/logs'
+    | '/admin/pagamentos'
+    | '/admin/planos'
+    | '/admin/sites'
+    | '/admin/tarefas'
+    | '/admin/usuarios'
+    | '/admin/workers'
+    | '/app/ajuda'
+    | '/app/campanhas'
+    | '/app/configuracoes'
+    | '/app/creditos'
+    | '/app/pagamentos'
+    | '/app/planos'
+    | '/app/relatorios'
+    | '/app/sites'
+    | '/_site/'
+    | '/admin/'
+    | '/app/'
+    | '/app/campanhas/$id'
+    | '/app/campanhas/nova'
+    | '/app/sites/$id'
+    | '/app/sites/novo'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  SiteRoute: typeof SiteRoute
+  SiteRoute: typeof SiteRouteWithChildren
+  AdminRoute: typeof AdminRouteWithChildren
+  AppRoute: typeof AppRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -47,11 +501,395 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SiteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_site/': {
+      id: '/_site/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof SiteIndexRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/cadastro': {
+      id: '/_site/cadastro'
+      path: '/cadastro'
+      fullPath: '/cadastro'
+      preLoaderRoute: typeof SiteCadastroRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/como-funciona': {
+      id: '/_site/como-funciona'
+      path: '/como-funciona'
+      fullPath: '/como-funciona'
+      preLoaderRoute: typeof SiteComoFuncionaRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/contato': {
+      id: '/_site/contato'
+      path: '/contato'
+      fullPath: '/contato'
+      preLoaderRoute: typeof SiteContatoRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/faq': {
+      id: '/_site/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof SiteFaqRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/login': {
+      id: '/_site/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof SiteLoginRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/planos': {
+      id: '/_site/planos'
+      path: '/planos'
+      fullPath: '/planos'
+      preLoaderRoute: typeof SitePlanosRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/privacidade': {
+      id: '/_site/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof SitePrivacidadeRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/public': {
+      id: '/_site/public'
+      path: '/public'
+      fullPath: '/public'
+      preLoaderRoute: typeof SitePublicRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/recuperar-senha': {
+      id: '/_site/recuperar-senha'
+      path: '/recuperar-senha'
+      fullPath: '/recuperar-senha'
+      preLoaderRoute: typeof SiteRecuperarSenhaRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/recursos': {
+      id: '/_site/recursos'
+      path: '/recursos'
+      fullPath: '/recursos'
+      preLoaderRoute: typeof SiteRecursosRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/termos': {
+      id: '/_site/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof SiteTermosRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/campanhas': {
+      id: '/admin/campanhas'
+      path: '/campanhas'
+      fullPath: '/admin/campanhas'
+      preLoaderRoute: typeof AdminCampanhasRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/configuracoes': {
+      id: '/admin/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/admin/configuracoes'
+      preLoaderRoute: typeof AdminConfiguracoesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/creditos': {
+      id: '/admin/creditos'
+      path: '/creditos'
+      fullPath: '/admin/creditos'
+      preLoaderRoute: typeof AdminCreditosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/logs': {
+      id: '/admin/logs'
+      path: '/logs'
+      fullPath: '/admin/logs'
+      preLoaderRoute: typeof AdminLogsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/pagamentos': {
+      id: '/admin/pagamentos'
+      path: '/pagamentos'
+      fullPath: '/admin/pagamentos'
+      preLoaderRoute: typeof AdminPagamentosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/planos': {
+      id: '/admin/planos'
+      path: '/planos'
+      fullPath: '/admin/planos'
+      preLoaderRoute: typeof AdminPlanosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/sites': {
+      id: '/admin/sites'
+      path: '/sites'
+      fullPath: '/admin/sites'
+      preLoaderRoute: typeof AdminSitesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/tarefas': {
+      id: '/admin/tarefas'
+      path: '/tarefas'
+      fullPath: '/admin/tarefas'
+      preLoaderRoute: typeof AdminTarefasRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/usuarios': {
+      id: '/admin/usuarios'
+      path: '/usuarios'
+      fullPath: '/admin/usuarios'
+      preLoaderRoute: typeof AdminUsuariosRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/workers': {
+      id: '/admin/workers'
+      path: '/workers'
+      fullPath: '/admin/workers'
+      preLoaderRoute: typeof AdminWorkersRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/app/': {
+      id: '/app/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/ajuda': {
+      id: '/app/ajuda'
+      path: '/ajuda'
+      fullPath: '/app/ajuda'
+      preLoaderRoute: typeof AppAjudaRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/campanhas': {
+      id: '/app/campanhas'
+      path: '/campanhas'
+      fullPath: '/app/campanhas'
+      preLoaderRoute: typeof AppCampanhasRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/configuracoes': {
+      id: '/app/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/app/configuracoes'
+      preLoaderRoute: typeof AppConfiguracoesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/creditos': {
+      id: '/app/creditos'
+      path: '/creditos'
+      fullPath: '/app/creditos'
+      preLoaderRoute: typeof AppCreditosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/pagamentos': {
+      id: '/app/pagamentos'
+      path: '/pagamentos'
+      fullPath: '/app/pagamentos'
+      preLoaderRoute: typeof AppPagamentosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/planos': {
+      id: '/app/planos'
+      path: '/planos'
+      fullPath: '/app/planos'
+      preLoaderRoute: typeof AppPlanosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/relatorios': {
+      id: '/app/relatorios'
+      path: '/relatorios'
+      fullPath: '/app/relatorios'
+      preLoaderRoute: typeof AppRelatoriosRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/sites': {
+      id: '/app/sites'
+      path: '/sites'
+      fullPath: '/app/sites'
+      preLoaderRoute: typeof AppSitesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/campanhas/$id': {
+      id: '/app/campanhas/$id'
+      path: '/$id'
+      fullPath: '/app/campanhas/$id'
+      preLoaderRoute: typeof AppCampanhasIdRouteImport
+      parentRoute: typeof AppCampanhasRoute
+    }
+    '/app/campanhas/nova': {
+      id: '/app/campanhas/nova'
+      path: '/nova'
+      fullPath: '/app/campanhas/nova'
+      preLoaderRoute: typeof AppCampanhasNovaRouteImport
+      parentRoute: typeof AppCampanhasRoute
+    }
+    '/app/sites/$id': {
+      id: '/app/sites/$id'
+      path: '/$id'
+      fullPath: '/app/sites/$id'
+      preLoaderRoute: typeof AppSitesIdRouteImport
+      parentRoute: typeof AppSitesRoute
+    }
+    '/app/sites/novo': {
+      id: '/app/sites/novo'
+      path: '/novo'
+      fullPath: '/app/sites/novo'
+      preLoaderRoute: typeof AppSitesNovoRouteImport
+      parentRoute: typeof AppSitesRoute
+    }
   }
 }
 
+interface SiteRouteChildren {
+  SiteCadastroRoute: typeof SiteCadastroRoute
+  SiteComoFuncionaRoute: typeof SiteComoFuncionaRoute
+  SiteContatoRoute: typeof SiteContatoRoute
+  SiteFaqRoute: typeof SiteFaqRoute
+  SiteLoginRoute: typeof SiteLoginRoute
+  SitePlanosRoute: typeof SitePlanosRoute
+  SitePrivacidadeRoute: typeof SitePrivacidadeRoute
+  SitePublicRoute: typeof SitePublicRoute
+  SiteRecuperarSenhaRoute: typeof SiteRecuperarSenhaRoute
+  SiteRecursosRoute: typeof SiteRecursosRoute
+  SiteTermosRoute: typeof SiteTermosRoute
+  SiteIndexRoute: typeof SiteIndexRoute
+}
+
+const SiteRouteChildren: SiteRouteChildren = {
+  SiteCadastroRoute: SiteCadastroRoute,
+  SiteComoFuncionaRoute: SiteComoFuncionaRoute,
+  SiteContatoRoute: SiteContatoRoute,
+  SiteFaqRoute: SiteFaqRoute,
+  SiteLoginRoute: SiteLoginRoute,
+  SitePlanosRoute: SitePlanosRoute,
+  SitePrivacidadeRoute: SitePrivacidadeRoute,
+  SitePublicRoute: SitePublicRoute,
+  SiteRecuperarSenhaRoute: SiteRecuperarSenhaRoute,
+  SiteRecursosRoute: SiteRecursosRoute,
+  SiteTermosRoute: SiteTermosRoute,
+  SiteIndexRoute: SiteIndexRoute,
+}
+
+const SiteRouteWithChildren = SiteRoute._addFileChildren(SiteRouteChildren)
+
+interface AdminRouteChildren {
+  AdminCampanhasRoute: typeof AdminCampanhasRoute
+  AdminConfiguracoesRoute: typeof AdminConfiguracoesRoute
+  AdminCreditosRoute: typeof AdminCreditosRoute
+  AdminLogsRoute: typeof AdminLogsRoute
+  AdminPagamentosRoute: typeof AdminPagamentosRoute
+  AdminPlanosRoute: typeof AdminPlanosRoute
+  AdminSitesRoute: typeof AdminSitesRoute
+  AdminTarefasRoute: typeof AdminTarefasRoute
+  AdminUsuariosRoute: typeof AdminUsuariosRoute
+  AdminWorkersRoute: typeof AdminWorkersRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminCampanhasRoute: AdminCampanhasRoute,
+  AdminConfiguracoesRoute: AdminConfiguracoesRoute,
+  AdminCreditosRoute: AdminCreditosRoute,
+  AdminLogsRoute: AdminLogsRoute,
+  AdminPagamentosRoute: AdminPagamentosRoute,
+  AdminPlanosRoute: AdminPlanosRoute,
+  AdminSitesRoute: AdminSitesRoute,
+  AdminTarefasRoute: AdminTarefasRoute,
+  AdminUsuariosRoute: AdminUsuariosRoute,
+  AdminWorkersRoute: AdminWorkersRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
+interface AppCampanhasRouteChildren {
+  AppCampanhasIdRoute: typeof AppCampanhasIdRoute
+  AppCampanhasNovaRoute: typeof AppCampanhasNovaRoute
+}
+
+const AppCampanhasRouteChildren: AppCampanhasRouteChildren = {
+  AppCampanhasIdRoute: AppCampanhasIdRoute,
+  AppCampanhasNovaRoute: AppCampanhasNovaRoute,
+}
+
+const AppCampanhasRouteWithChildren = AppCampanhasRoute._addFileChildren(
+  AppCampanhasRouteChildren,
+)
+
+interface AppSitesRouteChildren {
+  AppSitesIdRoute: typeof AppSitesIdRoute
+  AppSitesNovoRoute: typeof AppSitesNovoRoute
+}
+
+const AppSitesRouteChildren: AppSitesRouteChildren = {
+  AppSitesIdRoute: AppSitesIdRoute,
+  AppSitesNovoRoute: AppSitesNovoRoute,
+}
+
+const AppSitesRouteWithChildren = AppSitesRoute._addFileChildren(
+  AppSitesRouteChildren,
+)
+
+interface AppRouteChildren {
+  AppAjudaRoute: typeof AppAjudaRoute
+  AppCampanhasRoute: typeof AppCampanhasRouteWithChildren
+  AppConfiguracoesRoute: typeof AppConfiguracoesRoute
+  AppCreditosRoute: typeof AppCreditosRoute
+  AppPagamentosRoute: typeof AppPagamentosRoute
+  AppPlanosRoute: typeof AppPlanosRoute
+  AppRelatoriosRoute: typeof AppRelatoriosRoute
+  AppSitesRoute: typeof AppSitesRouteWithChildren
+  AppIndexRoute: typeof AppIndexRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppAjudaRoute: AppAjudaRoute,
+  AppCampanhasRoute: AppCampanhasRouteWithChildren,
+  AppConfiguracoesRoute: AppConfiguracoesRoute,
+  AppCreditosRoute: AppCreditosRoute,
+  AppPagamentosRoute: AppPagamentosRoute,
+  AppPlanosRoute: AppPlanosRoute,
+  AppRelatoriosRoute: AppRelatoriosRoute,
+  AppSitesRoute: AppSitesRouteWithChildren,
+  AppIndexRoute: AppIndexRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  SiteRoute: SiteRoute,
+  SiteRoute: SiteRouteWithChildren,
+  AdminRoute: AdminRouteWithChildren,
+  AppRoute: AppRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

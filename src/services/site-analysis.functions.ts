@@ -62,7 +62,7 @@ async function fetchText(url: string, allowedHost: string, redirects = 0): Promi
 
 function extractLocs(xml: string) {
   return [...xml.matchAll(/<loc[^>]*>\s*([^<]+?)\s*<\/loc>/gi)]
-    .map((match) => match[1].trim())
+    .map((match) => match[1]?.trim() ?? "")
     .filter(Boolean);
 }
 
@@ -76,11 +76,17 @@ function toAbsoluteUrl(value: string, base: string) {
   }
 }
 
-function extractTitle(html: string) {\n  return html.match(/<title[^>]*>\\s*([^<]+?)\\s*<\\/title>/i)?.[1]?.trim() ?? "";\n}\n\nfunction extractInternalLinks(html: string, origin: string) {
+function extractTitle(html: string) {
+  return html.match(/<title[^>]*>\s*([^<]+?)\s*<\/title>/i)?.[1]?.trim() ?? "";
+}
+
+function extractInternalLinks(html: string, origin: string) {
   const links = new Set<string>();
   for (const match of html.matchAll(/href\s*=\s*["']([^"']+)["']/gi)) {
-    const href = toAbsoluteUrl(match[1], origin);
-    if (href && new URL(href).origin === origin) links.add(href.split("#")[0]);
+    const raw = match[1];
+    if (!raw) continue;
+    const href = toAbsoluteUrl(raw, origin);
+    if (href && new URL(href).origin === origin) links.add(href.split("#")[0] ?? href);
   }
   return links.size;
 }
