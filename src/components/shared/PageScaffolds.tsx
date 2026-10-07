@@ -19,7 +19,7 @@ export function AppOverview({ title="Dashboard", description="Visão geral da su
     if(!b.error)setCredits(b.data?.balance??0); if(!r.error)setCompleted((r.data??[]).reduce((sum,row)=>sum+(Number(row.completed_sessions)||0),0));
   })()},[]);
   const active=campaigns.filter(c=>c.status==="active").length; const queued=campaigns.filter(c=>c.status==="active"||c.status==="paused").length;
-  return <div className="space-y-6"><PageHeader title={title} description={description} actions={<Button asChild><Link to="/app/campanhas/nova">Nova campanha <ArrowRight /></Link></Button>}/>
+  return <div className="space-y-6"><PageHeader title={title} description={description} actions={<div className="flex flex-wrap gap-2"><Button variant="outline" asChild><Link to="/app/sites/novo"><Globe2 /> Adicionar site</Link></Button><Button asChild><Link to="/app/campanhas/nova">Nova campanha <ArrowRight /></Link></Button></div>}/>
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <StatCard label="Campanhas ativas" value={active.toLocaleString("pt-BR")} hint="Campanhas em execução" icon={BarChart3}/>
       <StatCard label="Sites" value={sites.length.toLocaleString("pt-BR")} hint="Domínios cadastrados" icon={Globe2}/>
@@ -27,7 +27,7 @@ export function AppOverview({ title="Dashboard", description="Visão geral da su
       <StatCard label="Sessões concluídas" value={completed===null?"…":completed.toLocaleString("pt-BR")} hint={queued ? String(queued)+" campanha(s) em operação" : "Nenhuma campanha em operação"} icon={PlayCircle}/>
     </div>
     <Panel title="Acesso rápido"><div className="grid gap-3 md:grid-cols-3">
-      <Link to="/app/sites" className="rounded-xl border p-4 transition hover:bg-muted/40"><b>Sites</b><p className="mt-1 text-sm text-muted-foreground">Cadastre e analise seus domínios.</p></Link>
+      <div className="rounded-xl border p-4 transition hover:bg-muted/40"><div className="flex items-center justify-between gap-3"><div><b>Sites</b><p className="mt-1 text-sm text-muted-foreground">Cadastre e analise seus domínios.</p></div><Button size="sm" asChild><Link to="/app/sites/novo">Adicionar</Link></Button></div><Link to="/app/sites" className="mt-3 inline-flex text-sm font-medium text-primary hover:underline">Ver meus sites →</Link></div>
       <Link to="/app/campanhas" className="rounded-xl border p-4 transition hover:bg-muted/40"><b>Campanhas</b><p className="mt-1 text-sm text-muted-foreground">Configure jornadas, volume e horários.</p></Link>
       <Link to="/app/relatorios" className="rounded-xl border p-4 transition hover:bg-muted/40"><b>Relatórios</b><p className="mt-1 text-sm text-muted-foreground">Acompanhe sessões, páginas e falhas.</p></Link>
     </div></Panel></div>;
