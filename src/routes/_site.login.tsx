@@ -3,7 +3,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { PublicPage } from "@/components/shared/PageScaffolds";
 import { signIn } from "@/services/auth";
 
-export const Route = createFileRoute("/login.tsx")({
+export const Route = createFileRoute("/_site/login")({
   component: LoginPage,
 });
 
