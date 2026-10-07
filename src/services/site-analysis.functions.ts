@@ -76,7 +76,11 @@ function toAbsoluteUrl(value: string, base: string) {
   }
 }
 
-function extractTitle(html: string) {\n  return html.match(/<title[^>]*>\\s*([^<]+?)\\s*<\\/title>/i)?.[1]?.trim() ?? "";\n}\n\nfunction extractInternalLinks(html: string, origin: string) {
+function extractTitle(html: string) {
+  return html.match(/<title[^>]*>\s*([^<]+?)\s*<\/title>/i)?.[1]?.trim() ?? "";
+}
+
+function extractInternalLinks(html: string, origin: string) {
   const links = new Set<string>();
   for (const match of html.matchAll(/href\s*=\s*["']([^"']+)["']/gi)) {
     const href = toAbsoluteUrl(match[1], origin);
