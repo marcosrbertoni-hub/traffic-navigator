@@ -22,4 +22,5 @@ function Sites(){
       {key:"analysis",header:"Análise",cell:(r)=><span>{r.analysis?"Disponível":"Pendente"}</span>},
       {key:"actions",header:"Ações",cell:(r)=><Button size="sm" variant="outline" asChild><Link to="/app/sites/$id" params={{id:r.id}}>Abrir</Link></Button>},
     ]}/>}</Panel>
-  </div>\n}
+  </div>
+}
