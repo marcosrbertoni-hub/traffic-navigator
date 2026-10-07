@@ -1,12 +1,11 @@
 import { useSyncExternalStore } from "react";
 import type { Campaign, CampaignDraft, CampaignStatus, ID, Site } from "@/domain/types";
-import { demoCampaigns, demoSites } from "@/mocks/demo";
 import { loadPersistedState, savePersistedState } from "@/services/storage";
 import { supabase } from "@/lib/supabase";
 import { getSession } from "@/services/auth";
 
 type State = { campaigns: Campaign[]; sites: Site[] };
-let state: State = loadPersistedState({ campaigns: demoCampaigns, sites: demoSites });
+let state: State = loadPersistedState({ campaigns: [], sites: [] });
 const listeners = new Set<() => void>();
 const set = (next: State) => {
   state = next;
