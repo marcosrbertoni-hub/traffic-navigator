@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { EmptyState, PageHeader, Panel, StatCard, StatusBadge } from "@/components/shared/kit";
-import { getSite } from "@/services/campaigns";
+import { useSites } from "@/services/campaigns";
 import { analyzeSite, type SiteAnalysisResult } from "@/services/site-analysis";
 import { setCampaignPrefill } from "@/services/campaign-prefill";
 
@@ -10,7 +10,7 @@ export const Route = createFileRoute("/app/sites/$id")({ component: SiteDetails 
 
 function SiteDetails() {
   const { id } = Route.useParams();
-  const site = getSite(id);
+  const site = useSites().find((s) => s.id === id);
   const [result, setResult] = useState<SiteAnalysisResult | null>(null);
   const [selected, setSelected] = useState<string[]>([]);
   const [analyzing, setAnalyzing] = useState(false);
