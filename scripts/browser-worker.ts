@@ -159,6 +159,58 @@ async function main() {
     const page = await context.newPage();
     const started = Date.now();
 
+    const analyticsRequests: Array<{ host: string; path: string }> = [];
+    const analyticsResponses: Array<{ host: string; path: string; status: number }> = [];
+    const analyticsFailures: Array<{ host: string; path: string; error: string }> = [];
+    const consoleErrors: string[] = [];
+    const pageErrors: string[] = [];
+
+    const analyticsEndpoint = (rawUrl: string) => {
+      try {
+        const url = new URL(rawUrl);
+        if (
+          !url.hostname.includes("google-analytics.com") &&
+          !url.hostname.includes("analytics.google.com") &&
+          !url.hostname.includes("googletagmanager.com")
+        ) {
+          return null;
+        }
+        return { host: url.hostname, path: url.pathname };
+      } catch {
+        return null;
+      }
+    };
+
+    page.on("request", (request) => {
+      const endpoint = analyticsEndpoint(request.url());
+      if (endpoint) analyticsRequests.push(endpoint);
+    });
+
+    page.on("response", (response) => {
+      const endpoint = analyticsEndpoint(response.url());
+      if (endpoint) {
+        analyticsResponses.push({ ...endpoint, status: response.status() });
+      }
+    });
+
+    page.on("requestfailed", (request) => {
+      const endpoint = analyticsEndpoint(request.url());
+      if (endpoint) {
+        analyticsFailures.push({
+          ...endpoint,
+          error: request.failure()?.errorText ?? "unknown",
+        });
+      }
+    });
+
+    page.on("console", (message) => {
+      if (message.type() === "error") consoleErrors.push(message.text().slice(0, 500));
+    });
+
+    page.on("pageerror", (error) => {
+      pageErrors.push(error.message.slice(0, 500));
+    });
+
     try {
       await page.goto(parsed.toString(), {
         waitUntil: "domcontentloaded",
@@ -166,6 +218,36 @@ async function main() {
       });
       await page.waitForLoadState("networkidle", { timeout: 10000 }).catch(() => {});
       await page.waitForTimeout(DEFAULT_DWELL_MS);
+
+      const analyticsState = await page.evaluate(() => {
+        const win = window as Window & {
+          gtag?: unknown;
+          dataLayer?: unknown[];
+        };
+        return {
+          hasGtag: typeof win.gtag === "function",
+          hasDataLayer: Array.isArray(win.dataLayer),
+          dataLayerLength: Array.isArray(win.dataLayer) ? win.dataLayer.length : 0,
+        };
+      });
+
+      const analyticsScripts = await page.locator(
+        'script[src*="googletagmanager"], script[src*="google-analytics"]'
+      ).evaluateAll((scripts) =>
+        scripts
+          .map((script) => (script as HTMLScriptElement).src)
+          .filter(Boolean)
+          .map((src) => {
+            try {
+              const url = new URL(src);
+              return { host: url.hostname, path: url.pathname };
+            } catch {
+              return null;
+            }
+          })
+          .filter((item): item is { host: string; path: string } => item !== null)
+          .slice(0, 20)
+      );
 
       const finalUrl = new URL(page.url());
       if (normalizeHost(finalUrl.hostname) !== normalizeHost(site.domain)) {
@@ -229,6 +311,16 @@ async function main() {
           analytics_runtime: true,
           pages_visited: visited,
           remaining_pages_in_session: remaining.length,
+          analytics_request_count: analyticsRequests.length,
+          analytics_response_count: analyticsResponses.length,
+          analytics_failure_count: analyticsFailures.length,
+          analytics_requests: analyticsRequests.slice(0, 20),
+          analytics_responses: analyticsResponses.slice(0, 20),
+          analytics_failures: analyticsFailures.slice(0, 20),
+          analytics_scripts: analyticsScripts,
+          analytics_state: analyticsState,
+          console_errors: consoleErrors.slice(0, 10),
+          page_errors: pageErrors.slice(0, 10),
         },
       }).eq("job_id", job.id).eq("worker_id", workerId).is("finished_at", null);
 
@@ -239,6 +331,18 @@ async function main() {
         page: targetUrl,
         finalUrl: page.url(),
         pagesVisited: visited,
+        analytics: {
+          requestCount: analyticsRequests.length,
+          responseCount: analyticsResponses.length,
+          failureCount: analyticsFailures.length,
+          requests: analyticsRequests.slice(0, 10),
+          responses: analyticsResponses.slice(0, 10),
+          failures: analyticsFailures.slice(0, 10),
+          scripts: analyticsScripts,
+          state: analyticsState,
+          consoleErrors: consoleErrors.slice(0, 5),
+          pageErrors: pageErrors.slice(0, 5),
+        },
       }));
     } finally {
       await context.close();
