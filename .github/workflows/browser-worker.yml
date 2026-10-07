@@ -26,10 +26,10 @@ jobs:
           node-version: 22
 
       - name: Install browser worker dependencies
-        run: npm install --no-save playwright@1.63.0 @supabase/supabase-js@2.76.1
+        run: npm install --prefix scripts --no-package-lock --legacy-peer-deps playwright@1.63.0 @supabase/supabase-js@2.76.1
 
       - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+        run: ./scripts/node_modules/.bin/playwright install --with-deps chromium
 
       - name: Run browser worker
         run: node --experimental-strip-types scripts/browser-worker.ts
