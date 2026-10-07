@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { EmptyState, PageHeader, Panel, StatCard, StatusBadge } from "@/components/shared/kit";
-import { getSite, siteRepo } from "@/services/campaigns";
+import { getSite } from "@/services/campaigns";
 import { analyzeSite, type SiteAnalysisResult } from "@/services/site-analysis";
 import { setCampaignPrefill } from "@/services/campaign-prefill";
 
