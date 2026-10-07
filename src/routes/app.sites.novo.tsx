@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, PageHeader, Panel } from "@/components/shared/kit";
 import { siteRepo } from "@/services/campaigns";
