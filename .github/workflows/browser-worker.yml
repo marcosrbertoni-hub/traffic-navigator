@@ -2,8 +2,6 @@ name: Traffic Navigator Browser Worker
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "*/5 * * * *"
 
 concurrency:
   group: traffic-navigator-browser-worker
