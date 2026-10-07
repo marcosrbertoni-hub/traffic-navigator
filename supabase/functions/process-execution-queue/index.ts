@@ -1,19 +1,17 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const BATCH_SIZE = 4;
-const PAGE_TIMEOUT_MS = 8000;
+const PAGE_TIMEOUT_MS = 5000;
 const MAX_PAGES_PER_SESSION = 3;
 
 function normalizeHost(hostname: string) {
   return hostname.toLowerCase().replace(/^www\./, "");
 }
 
-function extractPages(journey: unknown): string[] {
+function getJourneyPages(journey: unknown): string[] {
   if (!journey || typeof journey !== "object") return [];
-  const pages = (journey as { pages?: unknown }).pages;
-  if (!Array.isArray(pages)) return [];
-  return pages.filter((page): page is string => typeof page === "string").slice(0, MAX_PAGES_PER_SESSION);
+  const value = (journey as { pages?: unknown }).pages;
+  return Array.isArray(value) ? value.filter((p): p is string => typeof p === "string").slice(0, MAX_PAGES_PER_SESSION) : [];
 }
 
 async function fetchAuthorizedPage(url: string) {
@@ -65,14 +63,12 @@ Deno.serve(async (req) => {
   if (schedule.error) console.error("scheduler", schedule.error.message);
 
   const workerId = crypto.randomUUID();
-  const now = new Date().toISOString();
-
   await db.from("workers").upsert({
     id: workerId,
     name: `edge-${workerId.slice(0, 8)}`,
     status: "online",
-    last_heartbeat_at: now,
-    metadata: { engine: "http-journey", batch_size: BATCH_SIZE },
+    last_heartbeat_at: new Date().toISOString(),
+    metadata: { engine: "http-journey", mode: "page-by-page" },
   });
 
   const finishWorker = async () => {
@@ -114,30 +110,33 @@ Deno.serve(async (req) => {
 
     if (siteError || !site) throw siteError ?? new Error("Site da campanha não encontrado.");
 
-    let { data: sessions, error: sessionError } = await db
+    const { data: session, error: sessionError } = await db
       .from("execution_sessions")
-      .select("id,planned_pages,planned_duration_sec,device,journey")
+      .select("id,planned_pages,planned_duration_sec,device,journey,pages_visited,actual_duration_sec")
       .eq("job_id", job.id)
       .eq("status", "queued")
       .order("created_at")
-      .limit(BATCH_SIZE);
+      .limit(1)
+      .maybeSingle();
 
     if (sessionError) throw sessionError;
 
-    if (!sessions?.length) {
+    if (!session) {
       const settings = (campaign.settings ?? {}) as Record<string, unknown>;
       const campaignPages = Array.isArray(settings.pages)
         ? settings.pages
-            .map((item) => (item && typeof item === "object" ? (item as { url?: unknown }).url : null))
+            .map((item) => item && typeof item === "object" ? (item as { url?: unknown }).url : null)
             .filter((url): url is string => typeof url === "string" && url.length > 0)
         : [];
       const startUrl = typeof settings.start_url === "string" ? settings.start_url : `https://${site.domain}/`;
       const requested = Math.max(Number(job.payload?.requested_sessions ?? 1), 1);
+
       const rows = Array.from({ length: Math.min(requested, 100) }, (_, index) => {
         const pageCount = Math.min(Math.max(campaignPages.length, 1), MAX_PAGES_PER_SESSION);
         const pages = Array.from({ length: pageCount }, (_, offset) =>
           campaignPages.length ? campaignPages[(index + offset) % campaignPages.length] : startUrl,
         );
+
         return {
           job_id: job.id,
           campaign_id: job.campaign_id,
@@ -146,141 +145,173 @@ Deno.serve(async (req) => {
           planned_duration_sec: 5,
           device: index % 2 === 0 ? "desktop" : "mobile",
           journey: { mode: "authorized-http-test", start: startUrl, pages },
+          pages_visited: 0,
+          actual_duration_sec: 0,
         };
       });
 
       const { error: insertError } = await db.from("execution_sessions").insert(rows);
       if (insertError) throw insertError;
-
-      const result = await db
-        .from("execution_sessions")
-        .select("id,planned_pages,planned_duration_sec,device,journey")
-        .eq("job_id", job.id)
-        .eq("status", "queued")
-        .order("created_at")
-        .limit(BATCH_SIZE);
-
-      if (result.error) throw result.error;
-      sessions = result.data ?? [];
     }
 
-    const allowedHost = normalizeHost(site.domain);
-    let sessionsSucceeded = 0;
-    let sessionsFailed = 0;
-    let pagesVisited = 0;
-    let totalDurationMs = 0;
+    const { data: current, error: currentError } = await db
+      .from("execution_sessions")
+      .select("id,planned_pages,journey,pages_visited,actual_duration_sec")
+      .eq("job_id", job.id)
+      .eq("status", "queued")
+      .order("created_at")
+      .limit(1)
+      .maybeSingle();
 
-    for (const session of sessions) {
-      const startedAt = new Date().toISOString();
+    if (currentError) throw currentError;
+    if (!current) throw new Error("Nenhuma sessão disponível para execução.");
+
+    const remainingPages = getJourneyPages(current.journey);
+    const page = remainingPages[0];
+
+    if (!page) {
       await db.from("execution_sessions").update({
-        status: "running",
-        started_at: startedAt,
-        error: null,
-      }).eq("id", session.id);
+        status: "succeeded",
+        finished_at: new Date().toISOString(),
+      }).eq("id", current.id);
 
-      const pages = extractPages(session.journey);
-      const errors: string[] = [];
-      let visited = 0;
-      let durationMs = 0;
+      await db.from("jobs").update({
+        status: "queued",
+        scheduled_at: new Date(Date.now() + 1000).toISOString(),
+        started_at: null,
+      }).eq("id", job.id);
 
-      for (const page of pages) {
-        let parsed: URL;
-        try {
-          parsed = new URL(page);
-        } catch {
-          errors.push(`URL inválida: ${page}`);
-          continue;
-        }
+      await db.from("job_runs").update({
+        status: "completed",
+        finished_at: new Date().toISOString(),
+        metrics: { page_step: true, sessions_processed: 1, pages_visited: current.pages_visited ?? 0 },
+      }).eq("job_id", job.id).eq("worker_id", workerId).is("finished_at", null);
 
-        if (normalizeHost(parsed.hostname) !== allowedHost) {
-          errors.push(`URL fora do domínio autorizado: ${parsed.hostname}`);
-          continue;
-        }
+      await finishWorker();
+      return Response.json({ processed: true, job_id: job.id, message: "Sessão concluída." });
+    }
 
-        const result = await fetchAuthorizedPage(parsed.toString());
-        durationMs += result.durationMs;
-        if (result.ok) {
-          visited += 1;
-        } else {
-          errors.push(`${parsed.pathname || "/"} retornou ${result.status || result.error || "erro"}`);
-        }
-      }
+    await db.from("execution_sessions").update({
+      status: "running",
+      started_at: new Date().toISOString(),
+      error: null,
+    }).eq("id", current.id);
 
-      const succeeded = visited > 0 && errors.length === 0;
-      if (succeeded) sessionsSucceeded += 1;
-      else sessionsFailed += 1;
-      pagesVisited += visited;
-      totalDurationMs += durationMs;
-
+    let parsed: URL;
+    try {
+      parsed = new URL(page);
+    } catch {
       await db.from("execution_sessions").update({
-        status: succeeded ? "succeeded" : "failed",
+        status: "failed",
+        finished_at: new Date().toISOString(),
+        error: `URL inválida: ${page}`,
+      }).eq("id", current.id);
+      throw new Error(`URL inválida: ${page}`);
+    }
+
+    if (normalizeHost(parsed.hostname) !== normalizeHost(site.domain)) {
+      await db.from("execution_sessions").update({
+        status: "failed",
+        finished_at: new Date().toISOString(),
+        error: `URL fora do domínio autorizado: ${parsed.hostname}`,
+      }).eq("id", current.id);
+      throw new Error("URL fora do domínio autorizado.");
+    }
+
+    const result = await fetchAuthorizedPage(parsed.toString());
+    const visited = (current.pages_visited ?? 0) + (result.ok ? 1 : 0);
+    const duration = (current.actual_duration_sec ?? 0) + Math.max(1, Math.round(result.durationMs / 1000));
+    const nextPages = remainingPages.slice(1);
+    const errors = result.ok ? null : `${parsed.pathname || "/"} retornou ${result.status || result.error || "erro"}`;
+
+    if (!result.ok) {
+      await db.from("execution_sessions").update({
+        status: "failed",
         finished_at: new Date().toISOString(),
         pages_visited: visited,
-        actual_duration_sec: Math.max(1, Math.round(durationMs / 1000)),
-        error: errors.length ? errors.join(" | ").slice(0, 2000) : null,
-      }).eq("id", session.id);
-    }
+        actual_duration_sec: duration,
+        error: errors,
+      }).eq("id", current.id);
 
-    const { count: remaining } = await db
-      .from("execution_sessions")
-      .select("id", { count: "exact", head: true })
-      .eq("job_id", job.id)
-      .eq("status", "queued");
+      await db.from("jobs").update({
+        status: "queued",
+        scheduled_at: new Date(Date.now() + 1000).toISOString(),
+        started_at: null,
+      }).eq("id", job.id);
+    } else if (nextPages.length > 0) {
+      await db.from("execution_sessions").update({
+        status: "queued",
+        pages_visited: visited,
+        actual_duration_sec: duration,
+        journey: { ...(current.journey as Record<string, unknown>), pages: nextPages },
+        error: null,
+      }).eq("id", current.id);
 
-    const hasRemaining = (remaining ?? 0) > 0;
-    const runFinishedAt = new Date().toISOString();
-
-    await db.from("job_runs").update({
-      status: "completed",
-      finished_at: runFinishedAt,
-      metrics: {
-        sessions_processed: sessionsSucceeded + sessionsFailed,
-        sessions_succeeded: sessionsSucceeded,
-        sessions_failed: sessionsFailed,
-        pages_visited: pagesVisited,
-        request_duration_sec: Math.round(totalDurationMs / 1000),
-        remaining_sessions: remaining ?? 0,
-      },
-    }).eq("job_id", job.id).eq("worker_id", workerId).is("finished_at", null);
-
-    if (hasRemaining) {
       await db.from("jobs").update({
         status: "queued",
         scheduled_at: new Date(Date.now() + 1000).toISOString(),
         started_at: null,
       }).eq("id", job.id);
     } else {
-      await db.from("jobs").update({
-        status: "completed",
-        finished_at: runFinishedAt,
-      }).eq("id", job.id);
+      await db.from("execution_sessions").update({
+        status: "succeeded",
+        finished_at: new Date().toISOString(),
+        pages_visited: visited,
+        actual_duration_sec: duration,
+        error: null,
+      }).eq("id", current.id);
+
+      const { count: remainingSessions } = await db
+        .from("execution_sessions")
+        .select("id", { count: "exact", head: true })
+        .eq("job_id", job.id)
+        .eq("status", "queued");
+
+      if ((remainingSessions ?? 0) > 0) {
+        await db.from("jobs").update({
+          status: "queued",
+          scheduled_at: new Date(Date.now() + 1000).toISOString(),
+          started_at: null,
+        }).eq("id", job.id);
+      } else {
+        await db.from("jobs").update({
+          status: "completed",
+          finished_at: new Date().toISOString(),
+        }).eq("id", job.id);
+      }
     }
+
+    await db.from("job_runs").update({
+      status: "completed",
+      finished_at: new Date().toISOString(),
+      metrics: {
+        page_step: true,
+        page_url: page,
+        page_ok: result.ok,
+        pages_visited: visited,
+        remaining_pages_in_session: nextPages.length,
+      },
+    }).eq("job_id", job.id).eq("worker_id", workerId).is("finished_at", null);
 
     await finishWorker();
 
     return Response.json({
       processed: true,
-      scheduled: schedule.data ?? 0,
       job_id: job.id,
-      sessions_processed: sessionsSucceeded + sessionsFailed,
-      pages_visited: pagesVisited,
-      remaining_sessions: remaining ?? 0,
+      page_ok: result.ok,
+      page_url: page,
+      pages_visited: visited,
+      remaining_pages: nextPages.length,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Execution worker failed";
-
     await db.from("logs").insert({
       level: "error",
       source: "execution-worker",
       message,
       metadata: { worker_id: workerId },
     });
-
-    await db.from("workers").update({
-      status: "offline",
-      last_heartbeat_at: new Date().toISOString(),
-    }).eq("id", workerId);
-
+    await finishWorker();
     return Response.json({ error: message }, { status: 500 });
   }
 });
