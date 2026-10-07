@@ -175,7 +175,12 @@ async function main() {
         ) {
           return null;
         }
-        return { host: url.hostname, path: url.pathname };
+        const params: Record<string, string> = {};
+        for (const key of ["tid", "en", "gcs", "gcd"]) {
+          const value = url.searchParams.get(key);
+          if (value) params[key] = value;
+        }
+        return { host: url.hostname, path: url.pathname, params };
       } catch {
         return null;
       }
